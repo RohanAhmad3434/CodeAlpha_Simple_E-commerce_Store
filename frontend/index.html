@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>eCommerce - Main</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+                  url('images/store.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 40px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+      color: #fff;
+    }
+
+    button {
+      padding: 14px 28px;
+      margin: 10px;
+      border: none;
+      border-radius: 10px;
+      background-color: #3498db;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+      transform: scale(1.05);
+    }
+
+    .logo {
+      width: 100px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="images/online-store.png" alt="Store Logo" class="logo" />
+    <h1>Welcome to My E-Commerce Store</h1>
+    <button id="adminBtn" onclick="location.href='admin-login.html'">As Admin</button>
+    <button id="userBtn" onclick="location.href='user-login.html'">As User</button>
+  </div>
+  <script src="js/main.js"></script>
+</body>
+</html>

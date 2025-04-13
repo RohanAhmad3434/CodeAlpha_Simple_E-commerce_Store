@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Dashboard</title>
+  <link rel="stylesheet" href="css/user-dashboard.css" />
+</head>
+<body>
+
+    <div class="welcome-container">
+      <h1>Welcome to User Dashboard</h1>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+    
+
+  <div class="container">
+    <h2>Available Products</h2>
+    <div id="shopProducts"></div>
+
+    <hr>
+
+    <h2>Your Cart</h2>
+    <div id="cartItems"></div>
+    <button onclick="placeOrder()">Place Order</button>
+
+    <hr>
+
+    <h2>Your Order History</h2>
+    <div id="orderHistory"></div>
+  </div>
+
+  <script>
+    const api = "http://localhost:3000/api";
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      alert("You're not logged in!");
+      window.location.href = "user-login.html"; // 🔁 Redirect to login
+    }
+
+    async function loadAllProducts() {
+      const res = await fetch(`${api}/admin/product`);
+      const products = await res.json();
+
+      const container = document.getElementById("shopProducts");
+      container.innerHTML = "";
+
+      products.forEach((p) => {
+        container.innerHTML += `
+          <div class="product">
+            <img src="${p.image}" width="100">
+            <p><strong>${p.name}</strong></p>
+            <p>Price: $${p.price}</p>
+            <button onclick="addToCart(${p.id}, '${p.name}', ${p.price})">Add to Cart</button>
+          </div>
+        `;
+      });
+    }
+
+    function addToCart(id, name, price) {
+      const existing = cart.find(item => item.id === id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ id, name, price, quantity: 1 });
+      }
+      localStorage.setItem("cart", JSON.stringify(cart));
+      showCartItems();
+      alert("Added to cart");
+    }
+
+    function showCartItems() {
+      const container = document.getElementById("cartItems");
+      container.innerHTML = "";
+
+      if (cart.length === 0) {
+        container.innerHTML = "<p>Your cart is empty.</p>";
+        return;
+      }
+
+      cart.forEach((item, index) => {
+        container.innerHTML += `
+          <div class="cart-item">
+            <p>${item.name} - $${item.price} (Qty: ${item.quantity})</p>
+            <button onclick="removeItem(${index})">Remove</button>
+          </div>
+        `;
+      });
+    }
+
+    function removeItem(index) {
+      cart.splice(index, 1);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      showCartItems();
+    }
+
+    async function placeOrder() {
+      if (cart.length === 0) {
+        alert("Cart is empty!");
+        return;
+      }
+
+      if (!userId) {
+        alert("User not logged in!");
+        return;
+      }
+
+      const res = await fetch(`${api}/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, items: cart }),
+      });
+
+      if (res.ok) {
+        alert("Order placed successfully!");
+        cart = [];
+        localStorage.setItem("cart", JSON.stringify(cart));
+        showCartItems();
+        loadOrderHistory(); // ✅ Refresh history
+      } else {
+        alert("Failed to place order");
+      }
+    }
+
+    async function loadOrderHistory() {
+      try {
+        const res = await fetch(`${api}/orders/${userId}`);
+        const orders = await res.json();
+
+        const container = document.getElementById("orderHistory");
+        container.innerHTML = "";
+
+        if (orders.length === 0) {
+          container.innerHTML = "<p>No previous orders found.</p>";
+          return;
+        }
+
+        orders.forEach((order) => {
+          const itemList = order.items.map(i => `${i.name} (x${i.qty})`).join(', ');
+
+          container.innerHTML += `
+            <div class="order">
+              <p><strong>Order ID:</strong> ${order.order_id}</p>
+              <p><strong>Total:</strong> $${order.total_amount}</p>
+              <p><strong>Date:</strong> ${new Date(order.created_at).toLocaleString()}</p>
+              <p><strong>Items:</strong> ${itemList}</p>
+              <button onclick="cancelOrder(${order.order_id})">Cancel Order</button>
+            </div>
+          `;
+        });
+
+      } catch (error) {
+        console.error("Failed to load order history:", error);
+      }
+    }
+
+    async function cancelOrder(orderId) {
+      if (!confirm("Are you sure you want to cancel this order?")) return;
+
+      const res = await fetch(`${api}/orders/${orderId}`, {
+        method: "DELETE"
+      });
+
+      const data = await res.json();
+      alert(data.message);
+      loadOrderHistory(); // reload orders
+    }
+
+    function logout() {
+      localStorage.removeItem("userId");
+      localStorage.removeItem("cart");
+      window.location.href = "user-login.html"; // 🔁 Redirect to login page
+    }
+
+    // Initial load
+    loadAllProducts();
+    showCartItems();
+    loadOrderHistory(); // ✅ Load on page open
+  </script>
+</body>
+</html>
